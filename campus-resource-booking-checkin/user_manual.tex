@@ -1,1 +1,260 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Campus Resource Booking \& Check-In System}
+\lhead{User Manual}
+\rfoot{Page \thepage}
+
+\title{
+    \vspace{2cm}
+    {\Large User Manual} \\[1em]
+    {\LARGE \textbf{Campus Resource Booking \& Check-In System}} \\[2em]
+    {\large CS3338 --- Group 1} \\[0.5em]
+    {\normalsize Version 4.0}
+    \vspace{2cm}
+}
+\author{Ifunanya Okafor}
+\date{May 15, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section*{Versions Table}
+\addcontentsline{toc}{section}{Versions Table}
+
+\begin{longtable}{|p{1.4cm}|p{2.4cm}|p{3.5cm}|p{6.5cm}|}
+\hline
+\textbf{Ver.} & \textbf{Date} & \textbf{Author(s)} & \textbf{Changes} \\
+\hline
+1.0 & Feb 2, 2025  & Ifunanya Okafor & Initial draft. Project overview, why it matters, snapshot 1 objectives, GitHub setup instructions. \\
+\hline
+2.0 & Mar 2, 2025  & Ifunanya Okafor & Added login/register instructions, how to browse resources and create bookings, cancellation steps. Updated run instructions. \\
+\hline
+3.0 & Apr 6, 2025  & Ifunanya Okafor & Added check-in usage instructions, admin dashboard walkthrough, staff resource management guide. \\
+\hline
+4.0 & May 15, 2025 & Ifunanya Okafor & Final revision. Added complete formal objective breakdown, all 4 snapshot reflections, full prerequisite table, updated seed accounts. \\
+\hline
+\end{longtable}
+\newpage
+
+% -------------------------------------------------------
+\section{Project Management}
+
+\textbf{Jira Project Board:}
+\url{https://YOUR-TEAM.atlassian.net/jira/software/projects/CRB/boards}
+
+\textit{Replace the URL above with your team's actual Jira link before submission.}
+
+\textbf{GitHub Repository:}
+\url{https://github.com/nanYaIfu/CS3338-Group1-Final-Project}
+
+% -------------------------------------------------------
+\section{Why This Software Matters}
+
+College campuses rely on shared physical resources --- study rooms, computer labs, tutoring appointments --- that are typically managed through informal systems: paper sign-up sheets, email chains, or first-come-first-served walk-ins. This creates predictable problems:
+
+\begin{itemize}
+    \item Students waste time walking to spaces that are already occupied.
+    \item No-shows waste reserved slots that other students could have used.
+    \item Staff have no way to track demand, identify peak hours, or plan capacity.
+    \item There is no accountability: anyone can claim or abandon a space without record.
+\end{itemize}
+
+The Campus Resource Booking \& Check-In System addresses all of these by providing:
+\begin{itemize}
+    \item A centralized, role-aware web platform where students can see real-time availability.
+    \item A booking and check-in system that creates accountability for reservations.
+    \item An admin analytics dashboard that gives staff data to make resource allocation decisions.
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Formal Objective Breakdown}
+
+\subsection{Snapshot 1 --- Feb 2, 2025 (Foundation)}
+\textbf{Goal:} Establish the technical foundation and complete all documentation scaffolding.
+\begin{itemize}
+    \item Define the project scope, MVP features, and technology stack
+    \item Set up GitHub repository with folder structure and branch conventions
+    \item Create and configure Jira project with Snapshot 1 sprint
+    \item Author initial versions of: SDD, SRS, Design Spec, User Manual, Snapshot Objectives
+    \item Create \texttt{docker-compose.yml} with frontend, backend, and MongoDB services
+    \item Create high-level workflow diagram
+\end{itemize}
+
+\subsection{Snapshot 2 --- Mar 2, 2025 (Core Features)}
+\textbf{Goal:} Implement authentication and the full resource booking flow.
+\begin{itemize}
+    \item Build user registration and login with JWT-based authentication
+    \item Implement role-based access control (student / staff / admin)
+    \item Build Resource CRUD endpoints and the resource browse/filter page
+    \item Build booking creation with server-side conflict detection
+    \item Build My Bookings page with cancel functionality
+    \item Run and document TestRail test suite (Snapshot 2 report)
+    \item Update SDD and SRS with implementation details
+\end{itemize}
+
+\subsection{Snapshot 3 --- Apr 6, 2025 (Advanced Features)}
+\textbf{Goal:} Add check-in system and admin dashboard.
+\begin{itemize}
+    \item Implement check-in endpoint with time-window validation (15 min before / 10 min after)
+    \item Add no-show detection via background interval job
+    \item Build admin analytics dashboard with usage stats and charts
+    \item Build staff resource management UI (create/edit/deactivate)
+    \item Run and document TestRail test suite (Snapshot 3 report)
+    \item Update all documentation
+\end{itemize}
+
+\subsection{Snapshot 4 --- May 15, 2025 (Finalization)}
+\textbf{Goal:} Polish, bug fixes, and final documentation.
+\begin{itemize}
+    \item Resolve all bugs identified in Snapshot 2 and 3 TestRail runs
+    \item Add rate limiting to authentication routes
+    \item Polish UI responsiveness and error handling across all pages
+    \item Confirm clean end-to-end Docker deployment
+    \item Run and document final TestRail test suite (Snapshot 4 report)
+    \item Finalize all documentation with complete version history
+    \item Document future work and known limitations
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Prerequisites}
+
+\begin{longtable}{|p{4cm}|p{3cm}|p{7cm}|}
+\hline
+\textbf{Tool} & \textbf{Version} & \textbf{Download} \\
+\hline
+Node.js & 18.x or later & \url{https://nodejs.org} \\
+\hline
+npm & 9.x or later & Bundled with Node.js \\
+\hline
+Docker Desktop & Latest stable & \url{https://docs.docker.com/get-docker} \\
+\hline
+Git & Any recent & \url{https://git-scm.com} \\
+\hline
+MongoDB (optional) & 6.x & Only needed if running without Docker \\
+\hline
+\end{longtable}
+
+% -------------------------------------------------------
+\section{How to Run the Project}
+
+\subsection{With Docker (Recommended)}
+\begin{enumerate}
+    \item Clone the repository:
+\begin{verbatim}
+git clone https://github.com/nanYaIfu/CS3338-Group1-Final-Project.git
+cd CS3338-Group1-Final-Project/campus-resource-booking-checkin
+\end{verbatim}
+
+    \item Copy and configure the environment file:
+\begin{verbatim}
+cp backend/.env.example backend/.env
+# Open backend/.env and set a strong JWT_SECRET value
+\end{verbatim}
+
+    \item Start all services:
+\begin{verbatim}
+docker-compose up --build
+\end{verbatim}
+
+    \item Access the app:
+\begin{verbatim}
+Frontend:  http://localhost:3000
+API:       http://localhost:5000
+\end{verbatim}
+
+    \item (Optional) Seed the database with test data:
+\begin{verbatim}
+docker exec crbs_backend node seed/seedData.js
+\end{verbatim}
+\end{enumerate}
+
+\subsection{Without Docker}
+
+\textbf{Backend:}
+\begin{verbatim}
+cd backend
+npm install
+npm run dev        # uses nodemon for hot-reload
+\end{verbatim}
+
+\textbf{Frontend (in a separate terminal):}
+\begin{verbatim}
+cd frontend
+npm install
+npm start
+\end{verbatim}
+
+Ensure MongoDB is running locally on \texttt{localhost:27017}, or set \texttt{MONGO\_URI} in \texttt{backend/.env} to a MongoDB Atlas connection string.
+
+% -------------------------------------------------------
+\section{Using the Application}
+
+\subsection{Registering and Logging In}
+\begin{enumerate}
+    \item Navigate to \texttt{http://localhost:3000}.
+    \item Click \textbf{Register} and fill in your name, email, password, and role.
+    \item After registration you will be redirected to the Login page.
+    \item Enter your credentials and click \textbf{Login}.
+\end{enumerate}
+
+\subsection{Browsing and Booking a Resource}
+\begin{enumerate}
+    \item After login, you will see the \textbf{Resource Browse} page.
+    \item Use the type and location filters to narrow results.
+    \item Click \textbf{Book} on any resource card.
+    \item Select a date and an available time slot, then click \textbf{Confirm Booking}.
+\end{enumerate}
+
+\subsection{Checking In}
+\begin{enumerate}
+    \item Navigate to \textbf{My Bookings}.
+    \item Find the upcoming booking you want to check in to.
+    \item The \textbf{Check In} button will become active within 15 minutes of the booking start time.
+    \item Click \textbf{Check In} to confirm your arrival. The status will update to ``Checked In.''
+\end{enumerate}
+
+\subsection{Cancelling a Booking}
+\begin{enumerate}
+    \item Navigate to \textbf{My Bookings}.
+    \item Find the booking you wish to cancel.
+    \item Click \textbf{Cancel}. You will be asked to confirm.
+\end{enumerate}
+
+% -------------------------------------------------------
+\section{Default Seed Accounts}
+
+\begin{longtable}{|p{2.5cm}|p{4cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{Role} & \textbf{Email} & \textbf{Password} & \textbf{Notes} \\
+\hline
+Admin   & admin@campus.edu   & admin123   & Development seed only \\
+\hline
+Staff   & staff@campus.edu   & staff123   & Development seed only \\
+\hline
+Student & student@campus.edu & student123 & Development seed only \\
+\hline
+\end{longtable}
+
+\textit{Change all seed passwords before any public or production deployment.}
+
+\end{document}
 
