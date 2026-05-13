@@ -1,1 +1,442 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+\usepackage{enumitem}
 
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Campus Resource Booking \& Check-In System}
+\lhead{SDD}
+\rfoot{Page \thepage}
+
+\title{
+    \vspace{2cm}
+    {\Large Software Design Document (SDD)} \\[1em]
+    {\LARGE \textbf{Campus Resource Booking \& Check-In System}} \\[2em]
+    {\large CS3338 --- Group 1} \\[0.5em]
+    {\normalsize Version 4.0}
+    \vspace{2cm}
+}
+\author{Britany Rodriguez \& Herlyn Dsouza}
+\date{May 15, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section*{Versions Table}
+\addcontentsline{toc}{section}{Versions Table}
+
+\begin{longtable}{|p{1.4cm}|p{2.4cm}|p{4cm}|p{6cm}|}
+\hline
+\textbf{Ver.} & \textbf{Date} & \textbf{Author(s)} & \textbf{Changes} \\
+\hline
+1.0 & Feb 2, 2025  & B. Rodriguez, H. Dsouza & Initial draft. Architecture overview, tech stack, DB schema skeleton, user roles defined. \\
+\hline
+2.0 & Mar 2, 2025  & B. Rodriguez, H. Dsouza & Added auth system design, JWT middleware, resource and booking data models, REST API route table, conflict detection logic. \\
+\hline
+3.0 & Apr 6, 2025  & B. Rodriguez, H. Dsouza & Added check-in flow design (time-window validation), admin analytics architecture, MongoDB index strategy. \\
+\hline
+4.0 & May 15, 2025 & B. Rodriguez, H. Dsouza & Final revision. Added error handling strategy, rate limiting design, performance notes, finalized all sections. \\
+\hline
+\end{longtable}
+\newpage
+
+% -------------------------------------------------------
+\section{Introduction}
+
+\subsection{Purpose}
+This Software Design Document (SDD) describes the complete architecture, design decisions, component breakdown, and data models for the Campus Resource Booking \& Check-In System. It serves as the primary technical reference for all developers building and maintaining the system across all project snapshots.
+
+\subsection{Intended Audience}
+\begin{itemize}
+    \item \textbf{Developers} --- Britany Rodriguez (Auth \& Users), Herlyn Dsouza (Resources \& Booking), Israel Melchor (Frontend)
+    \item \textbf{DevOps / QA} --- Nautica Uribe, responsible for Docker deployment and TestRail testing
+    \item \textbf{Course Instructor} --- For evaluation and review of design decisions at each checkpoint
+\end{itemize}
+
+\subsection{Project Overview}
+The Campus Resource Booking \& Check-In System is a full-stack web platform that allows college students to browse, reserve, and check in to campus resources such as study rooms, computer labs, and tutoring sessions. Staff and administrators can manage resource availability and view usage analytics on a dedicated admin dashboard.
+
+\subsection{Scope}
+The completed system covers:
+\begin{itemize}
+    \item Student-facing resource browsing, booking, and check-in flows
+    \item Staff resource management and booking oversight
+    \item Admin dashboard with usage analytics and user management
+    \item RESTful API backend with JWT-based authentication and role-based access control (RBAC)
+    \item MongoDB persistence with booking conflict detection and index optimization
+    \item Dockerized multi-container deployment via \texttt{docker-compose}
+\end{itemize}
+
+% -------------------------------------------------------
+\section{System Architecture}
+
+\subsection{High-Level Architecture}
+The system follows a three-tier client-server architecture:
+
+\begin{enumerate}
+    \item \textbf{Frontend (Client)} --- React 18 SPA served from a Docker container on port 3000. All server communication is done via REST API calls.
+    \item \textbf{Backend (Server)} --- Node.js 18 + Express.js API on port 5000. Handles all business logic, authentication, authorization, and database access.
+    \item \textbf{Database} --- MongoDB 6 instance on port 27017 with a named Docker volume for data persistence.
+\end{enumerate}
+
+\subsection{Request Lifecycle}
+\begin{enumerate}
+    \item User opens React frontend in browser.
+    \item User authenticates; backend returns signed JWT (24-hour expiry).
+    \item React stores JWT in \texttt{localStorage} and attaches it to all requests via Axios interceptor.
+    \item Express \texttt{authMiddleware} validates token signature and expiry; attaches decoded payload to \texttt{req.user}.
+    \item \texttt{roleMiddleware} verifies the user's role is permitted for the route.
+    \item Controller executes business logic and communicates with MongoDB via Mongoose.
+    \item JSON response returned to client; React state updates and re-renders UI.
+\end{enumerate}
+
+\subsection{Technology Stack}
+
+\begin{longtable}{|p{2.8cm}|p{3.5cm}|p{7cm}|}
+\hline
+\textbf{Layer} & \textbf{Technology} & \textbf{Purpose} \\
+\hline
+Frontend & React 18 & Component-based SPA \\
+\hline
+Frontend & React Router 6 & Client-side routing \\
+\hline
+Frontend & Axios & HTTP client for REST calls \\
+\hline
+Frontend & Bootstrap 5 & Responsive CSS framework \\
+\hline
+Backend & Node.js 18 & JavaScript runtime \\
+\hline
+Backend & Express.js 4 & HTTP routing and middleware \\
+\hline
+Backend & jsonwebtoken & JWT sign and verify \\
+\hline
+Backend & bcrypt & Password hashing (cost factor 10) \\
+\hline
+Backend & express-validator & Input validation \\
+\hline
+Backend & express-rate-limit & Brute-force protection \\
+\hline
+Backend & cors / dotenv & Cross-origin + env config \\
+\hline
+Database & MongoDB 6 & NoSQL document store \\
+\hline
+Database & Mongoose 7 & ODM --- schemas, validation, queries \\
+\hline
+DevOps & Docker / docker-compose & Multi-container deployment \\
+\hline
+DevOps & GitHub & Version control \\
+\hline
+\end{longtable}
+
+\subsection{Project Directory Structure}
+
+\begin{verbatim}
+campus-resource-booking-checkin/
+├── frontend/
+│   ├── public/
+│   │   └── index.html
+│   └── src/
+│       ├── components/
+│       │   ├── Navbar.jsx
+│       │   ├── BookingCard.jsx
+│       │   ├── ResourceCard.jsx
+│       │   └── ProtectedRoute.jsx
+│       ├── pages/
+│       │   ├── Login.jsx
+│       │   ├── Register.jsx
+│       │   ├── Resources.jsx
+│       │   ├── BookResource.jsx
+│       │   ├── MyBookings.jsx
+│       │   ├── AdminDashboard.jsx
+│       │   └── StaffResources.jsx
+│       ├── services/
+│       │   └── api.js
+│       ├── context/
+│       │   └── AuthContext.jsx
+│       └── App.js
+├── backend/
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── resourceController.js
+│   │   ├── bookingController.js
+│   │   └── adminController.js
+│   ├── middleware/
+│   │   ├── authMiddleware.js
+│   │   └── roleMiddleware.js
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Resource.js
+│   │   └── Booking.js
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── resourceRoutes.js
+│   │   ├── bookingRoutes.js
+│   │   └── adminRoutes.js
+│   ├── utils/
+│   │   └── conflictCheck.js
+│   ├── seed/
+│   │   └── seedData.js
+│   └── server.js
+├── docs/
+│   ├── sdd.tex
+│   ├── srs.tex
+│   ├── user_manual.tex
+│   ├── design_spec.tex
+│   ├── snapshot_objectives.tex
+│   └── workflow_diagram.tex
+├── docker-compose.yml
+└── README.md
+\end{verbatim}
+
+% -------------------------------------------------------
+\section{Authentication \& Authorization Design}
+\textit{(Introduced Snapshot 2 --- Mar 2, 2025)}
+
+\subsection{Authentication Flow}
+\begin{enumerate}
+    \item Client sends \texttt{POST /api/auth/register} with name, email, password, role.
+    \item Backend hashes password with \texttt{bcrypt} (cost 10) and saves the User document.
+    \item Client sends \texttt{POST /api/auth/login} with email + password.
+    \item Backend finds user by email, runs \texttt{bcrypt.compare()}.
+    \item On success, signs a JWT: \texttt{jwt.sign(\{id, role\}, JWT\_SECRET, \{expiresIn: '24h'\})}.
+    \item Token returned to client; stored in \texttt{localStorage}.
+    \item All protected routes require \texttt{Authorization: Bearer <token>} header.
+\end{enumerate}
+
+\subsection{JWT Middleware (\texttt{authMiddleware.js})}
+\begin{verbatim}
+const protect = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'No token' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+\end{verbatim}
+
+\subsection{Role Middleware (\texttt{roleMiddleware.js})}
+\begin{verbatim}
+const requireRole = (...roles) => (req, res, next) => {
+  if (!roles.includes(req.user.role))
+    return res.status(403).json({ message: 'Forbidden' });
+  next();
+};
+\end{verbatim}
+
+% -------------------------------------------------------
+\section{Booking Conflict Detection}
+\textit{(Introduced Snapshot 2 --- Mar 2, 2025)}
+
+Before confirming a booking, \texttt{conflictCheck.js} queries MongoDB for overlapping bookings:
+
+\begin{verbatim}
+const hasConflict = async (resourceId, startTime, endTime, excludeId) => {
+  const query = {
+    resourceId,
+    status: { $in: ['confirmed', 'checked-in'] },
+    _id: { $ne: excludeId },
+    $or: [
+      { startTime: { $lt: endTime, $gte: startTime } },
+      { endTime:   { $gt: startTime, $lte: endTime } },
+      { startTime: { $lte: startTime }, endTime: { $gte: endTime } }
+    ]
+  };
+  return !!(await Booking.findOne(query));
+};
+\end{verbatim}
+
+% -------------------------------------------------------
+\section{Check-In System Design}
+\textit{(Introduced Snapshot 3 --- Apr 6, 2025)}
+
+\subsection{Time-Window Validation}
+A student may check in only within:
+\begin{itemize}
+    \item \textbf{Window opens:} 15 minutes before \texttt{booking.startTime}
+    \item \textbf{Window closes:} 10 minutes after \texttt{booking.startTime}
+\end{itemize}
+
+Server-side validation in \texttt{bookingController.js}:
+\begin{verbatim}
+const now   = new Date();
+const open  = new Date(booking.startTime.getTime() - 15 * 60000);
+const close = new Date(booking.startTime.getTime() + 10 * 60000);
+if (now < open || now > close)
+  return res.status(400).json({ message: 'Outside check-in window' });
+booking.status = 'checked-in';
+await booking.save();
+\end{verbatim}
+
+\subsection{No-Show Detection}
+A \texttt{setInterval} in \texttt{server.js} runs every 30 minutes and bulk-updates all bookings whose check-in window has closed without a check-in to status \texttt{'no-show'}.
+
+% -------------------------------------------------------
+\section{Admin Analytics Architecture}
+\textit{(Introduced Snapshot 3 --- Apr 6, 2025)}
+
+\subsection{Endpoint}
+\texttt{GET /api/admin/analytics} is restricted to \texttt{admin} role only. It returns:
+\begin{itemize}
+    \item Total bookings (all time)
+    \item Bookings in last 30 days
+    \item Check-in rate (\%)
+    \item No-show rate (\%)
+    \item Top 5 most-booked resources
+    \item Daily booking counts for the last 30 days (time-series array for chart)
+\end{itemize}
+
+\subsection{MongoDB Aggregation (Daily Counts)}
+\begin{verbatim}
+Booking.aggregate([
+  { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+  { $group: {
+      _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+      count: { $sum: 1 }
+  }},
+  { $sort: { _id: 1 } }
+])
+\end{verbatim}
+
+% -------------------------------------------------------
+\section{Error Handling \& Performance}
+\textit{(Finalized Snapshot 4 --- May 15, 2025)}
+
+\subsection{Global Error Handler}
+\begin{verbatim}
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error'
+  });
+});
+\end{verbatim}
+
+\subsection{Rate Limiting}
+\texttt{express-rate-limit} applied to \texttt{/api/auth} routes: max 10 requests per IP per 15-minute window. Returns HTTP 429 on violation.
+
+\subsection{MongoDB Index Strategy}
+
+\begin{longtable}{|p{3cm}|p{3cm}|p{7cm}|}
+\hline
+\textbf{Collection} & \textbf{Index Fields} & \textbf{Purpose} \\
+\hline
+users       & email (unique)                     & Fast lookup on login \\
+\hline
+resources   & type, isActive                     & Browse/filter queries \\
+\hline
+bookings    & userId                             & My Bookings page \\
+\hline
+bookings    & resourceId, startTime, endTime     & Conflict detection \\
+\hline
+bookings    & createdAt                          & Analytics aggregation \\
+\hline
+\end{longtable}
+
+% -------------------------------------------------------
+\section{User Interface Overview}
+
+\subsection{User Roles \& Permissions}
+
+\begin{longtable}{|p{2.2cm}|p{11cm}|}
+\hline
+\textbf{Role} & \textbf{Capabilities} \\
+\hline
+Student & Register, login, browse/filter resources, create/cancel bookings, check in within window \\
+\hline
+Staff   & All student permissions + create/edit resources, view bookings for managed resources \\
+\hline
+Admin   & Full access: all users, all resources, all bookings, analytics dashboard \\
+\hline
+\end{longtable}
+
+\subsection{Database Schema}
+
+\paragraph{User}
+\begin{verbatim}
+{ _id, name, email, passwordHash,
+  role: enum['student','staff','admin'],
+  isActive: Boolean, createdAt: Date }
+\end{verbatim}
+
+\paragraph{Resource}
+\begin{verbatim}
+{ _id, name, type: enum['study-room','lab','tutoring','other'],
+  location, capacity, availableHours: { open, close },
+  createdBy: ObjectId(User), isActive: Boolean, createdAt: Date }
+\end{verbatim}
+
+\paragraph{Booking}
+\begin{verbatim}
+{ _id, userId: ObjectId(User), resourceId: ObjectId(Resource),
+  startTime: Date, endTime: Date,
+  status: enum['confirmed','cancelled','checked-in','no-show'],
+  createdAt: Date }
+\end{verbatim}
+
+% -------------------------------------------------------
+\section*{Glossary}
+\addcontentsline{toc}{section}{Glossary}
+
+\begin{longtable}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Term} & \textbf{Definition} \\
+\hline
+SDD   & Software Design Document \\
+\hline
+API   & Application Programming Interface \\
+\hline
+REST  & Representational State Transfer \\
+\hline
+JWT   & JSON Web Token \\
+\hline
+RBAC  & Role-Based Access Control \\
+\hline
+CRUD  & Create, Read, Update, Delete \\
+\hline
+MVP   & Minimum Viable Product \\
+\hline
+ODM   & Object Document Mapper \\
+\hline
+SPA   & Single-Page Application \\
+\hline
+UI    & User Interface \\
+\hline
+\end{longtable}
+
+% -------------------------------------------------------
+\section*{References}
+\addcontentsline{toc}{section}{References}
+
+\begin{itemize}
+    \item React: \url{https://react.dev}
+    \item Express.js: \url{https://expressjs.com}
+    \item Mongoose: \url{https://mongoosejs.com}
+    \item JSON Web Tokens: \url{https://jwt.io/introduction}
+    \item bcrypt npm: \url{https://www.npmjs.com/package/bcrypt}
+    \item Docker docs: \url{https://docs.docker.com}
+    \item MongoDB aggregation: \url{https://www.mongodb.com/docs/manual/aggregation}
+    \item express-rate-limit: \url{https://www.npmjs.com/package/express-rate-limit}
+\end{itemize}
+
+\end{document}
