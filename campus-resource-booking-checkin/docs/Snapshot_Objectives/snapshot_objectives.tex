@@ -1,0 +1,229 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Campus Resource Booking \& Check-In System}
+\lhead{Snapshot Objectives}
+\rfoot{Page \thepage}
+
+\title{
+    \vspace{2cm}
+    {\Large Snapshot Objectives} \\[1em]
+    {\LARGE \textbf{Campus Resource Booking \& Check-In System}} \\[2em]
+    {\large CS3338 --- Group 1} \\[0.5em]
+    {\normalsize Version 4.0 --- All Snapshots Complete}
+    \vspace{2cm}
+}
+\author{Ifunanya Okafor}
+\date{May 15, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section*{Versions Table}
+\addcontentsline{toc}{section}{Versions Table}
+
+\begin{longtable}{|p{1.4cm}|p{2.4cm}|p{3.5cm}|p{6.5cm}|}
+\hline
+\textbf{Ver.} & \textbf{Date} & \textbf{Author(s)} & \textbf{Changes} \\
+\hline
+1.0 & Feb 2, 2025  & Ifunanya Okafor & Snapshot 1 objectives written. \\
+\hline
+2.0 & Mar 2, 2025  & Ifunanya Okafor & Snapshot 1 reflection added. Snapshot 2 objectives written. \\
+\hline
+3.0 & Apr 6, 2025  & Ifunanya Okafor & Snapshot 2 reflection added. Snapshot 3 objectives written. \\
+\hline
+4.0 & May 15, 2025 & Ifunanya Okafor & Snapshot 3 reflection added. Snapshot 4 objectives and future work written. \\
+\hline
+\end{longtable}
+\newpage
+
+% -------------------------------------------------------
+\section{Snapshot 1 --- Start Objectives}
+\textbf{Date:} February 2, 2025
+
+\subsection{Goal Summary}
+Snapshot 1 establishes the complete foundation for the project. At this stage the goal is planning, architecture decisions, documentation scaffolding, and tooling setup. No production application code is required; the deliverable is a clear, consistent picture of what the system will be and how it will be built.
+
+\subsection{Objectives}
+\begin{enumerate}
+    \item \textbf{Define the project scope and MVP} --- Agree as a team on the core features: resource browsing, booking, check-in, and admin oversight. Document what is and is not in scope.
+    \item \textbf{Establish the GitHub repository} --- Set up folder structure (\texttt{frontend/}, \texttt{backend/}, \texttt{docs/}), branch naming conventions, and commit message standards.
+    \item \textbf{Confirm the technology stack} --- React 18 (frontend), Node.js + Express.js (backend), MongoDB with Mongoose (database), Docker (deployment).
+    \item \textbf{Assign team roles} --- Ifunanya Okafor (Project Lead), Britany Rodriguez (Backend Dev 1 --- Auth \& Users), Herlyn Dsouza (Backend Dev 2 --- Resources \& Booking), Israel Melchor (Frontend Dev), Nautica Uribe (DevOps/QA).
+    \item \textbf{Set up Jira board} --- Create the Snapshot 1 sprint, populate it with tasks for all team members, add initial bug and risk tickets.
+    \item \textbf{Author all documentation first drafts:}
+        \begin{itemize}
+            \item SDD --- architecture, tech stack, user roles, DB schema skeleton
+            \item SRS --- functional requirements, interface requirements, legal/ethical considerations
+            \item User Manual --- how to run the project, goals, Jira link
+            \item Design Spec --- page breakdown, dependencies, Docker images
+            \item Snapshot Objectives (this document) --- Snapshot 1 section
+        \end{itemize}
+    \item \textbf{Create \texttt{docker-compose.yml}} --- Define frontend (port 3000), backend (port 5000), and MongoDB (port 27017) services.
+    \item \textbf{Create workflow diagram} --- High-level overview of how the user, frontend, backend, and database interact.
+\end{enumerate}
+
+% -------------------------------------------------------
+\section{Snapshot 2 --- Checkpoint 1}
+\textbf{Date:} March 2, 2025
+
+\subsection{Reflection on Snapshot 1}
+Snapshot 1 was completed successfully and on time. All documentation drafts were authored and committed to the repository. The GitHub repository structure was established and agreed upon by the team. The Jira board was set up with a full sprint of tickets and the \texttt{docker-compose.yml} was verified to spin up all three containers cleanly with \texttt{docker-compose up --build}.
+
+One challenge encountered was aligning on the MongoDB schema before development began --- specifically deciding whether to embed booking data inside resource documents or keep them as separate collections. The team decided on separate collections with references, which improved flexibility for the analytics features planned in Snapshot 3.
+
+\subsection{New Feature: Authentication \& Resource Booking}
+The primary focus of Snapshot 2 is implementing the two most critical user flows: authentication (so any feature can be access-controlled) and the end-to-end booking flow (the core value proposition of the system).
+
+\subsection{Objectives}
+\begin{enumerate}
+    \item \textbf{Authentication system (Britany Rodriguez):}
+        \begin{itemize}
+            \item Implement \texttt{POST /api/auth/register} with bcrypt password hashing
+            \item Implement \texttt{POST /api/auth/login} returning a signed JWT
+            \item Write \texttt{authMiddleware.js} for JWT verification on protected routes
+            \item Write \texttt{roleMiddleware.js} for RBAC route protection
+        \end{itemize}
+    \item \textbf{Resource \& Booking APIs (Herlyn Dsouza):}
+        \begin{itemize}
+            \item Implement full CRUD for resources (\texttt{/api/resources})
+            \item Implement booking creation with server-side conflict detection
+            \item Implement booking cancellation
+        \end{itemize}
+    \item \textbf{Frontend pages (Israel Melchor):}
+        \begin{itemize}
+            \item Login page, Register page, Resource Browse page
+            \item Booking creation page, My Bookings page with cancel functionality
+        \end{itemize}
+    \item \textbf{DevOps / QA:}
+        \begin{itemize}
+            \item Create TestRail test suite for auth and booking features
+            \item Run test suite and submit Snapshot 2 TestRail report
+        \end{itemize}
+    \item \textbf{Documentation:}
+        \begin{itemize}
+            \item Update SDD (v2.0) with auth design, API route table, conflict detection
+            \item Update SRS (v2.0) with full API endpoint spec and input validation requirements
+            \item Update Design Spec (v2.0) with page specs for all new pages
+            \item Update User Manual (v2.0) with login/booking usage instructions
+        \end{itemize}
+\end{enumerate}
+
+% -------------------------------------------------------
+\section{Snapshot 3 --- Checkpoint 2}
+\textbf{Date:} April 6, 2025
+
+\subsection{Reflection on Snapshot 2}
+Snapshot 2 was largely completed. Authentication, resource CRUD, and the booking flow were fully implemented and working end-to-end. The conflict detection logic required more iteration than expected --- the initial implementation had an edge case where bookings exactly at the boundary of another booking were incorrectly flagged as conflicts, which was resolved by adjusting the time overlap query to use exclusive boundary comparisons.
+
+The TestRail Snapshot 2 run identified two bugs: (1) the login error message briefly flashed the previous error state before clearing on a successful second attempt --- fixed with a \texttt{useEffect} reset, and (2) the booking page showed time slots outside the resource's available hours --- fixed by filtering the slot generator to the \texttt{availableHours} field.
+
+\subsection{New Feature: Check-In System \& Admin Dashboard}
+Snapshot 3 completes the second and third major user journeys: the check-in flow for students and the admin oversight dashboard.
+
+\subsection{Objectives}
+\begin{enumerate}
+    \item \textbf{Check-in system (Britany Rodriguez + Israel Melchor):}
+        \begin{itemize}
+            \item Implement \texttt{PUT /api/bookings/:id/checkin} with time-window validation
+            \item Add no-show background job (\texttt{setInterval} every 30 minutes)
+            \item Add Check-In button to My Bookings page, active only within window
+        \end{itemize}
+    \item \textbf{Admin dashboard (Herlyn Dsouza + Israel Melchor):}
+        \begin{itemize}
+            \item Implement \texttt{GET /api/admin/analytics} with MongoDB aggregation pipeline
+            \item Add admin user and booking management endpoints
+            \item Build Admin Dashboard UI with summary cards and recharts bar chart
+        \end{itemize}
+    \item \textbf{Staff resource management (Israel Melchor):}
+        \begin{itemize}
+            \item Build Staff Resource Management page with add/edit/deactivate modal
+        \end{itemize}
+    \item \textbf{DevOps / QA (Nautica Uribe):}
+        \begin{itemize}
+            \item Create TestRail test suite covering check-in, no-show logic, and admin access
+            \item Run test suite and submit Snapshot 3 TestRail report
+        \end{itemize}
+    \item \textbf{Documentation:}
+        \begin{itemize}
+            \item Update SDD (v3.0) with check-in design and analytics architecture
+            \item Update SRS (v3.0) with check-in requirements and admin interface requirements
+            \item Update Design Spec (v3.0) with Check-In button spec, Admin Dashboard spec, recharts dependency
+            \item Update User Manual (v3.0) with check-in and admin usage instructions
+        \end{itemize}
+\end{enumerate}
+
+% -------------------------------------------------------
+\section{Snapshot 4 --- Final Submission}
+\textbf{Date:} May 15, 2025
+
+\subsection{Reflection on Snapshot 3}
+Snapshot 3 delivered all planned features. The check-in time-window validation and the no-show background job both worked correctly in testing. The admin analytics dashboard rendered correctly with real data from the seed database.
+
+The most significant challenge in Snapshot 3 was the MongoDB aggregation pipeline for the daily booking counts chart. The first version returned UTC midnight timestamps rather than date strings, which caused the recharts x-axis to render epoch numbers. This was fixed by adding a \texttt{\$dateToString} stage to the aggregation pipeline.
+
+The TestRail Snapshot 3 run identified three issues: (1) the Check-In button was not re-enabling after a page refresh within the valid window due to a stale React state bug --- fixed with a 60-second polling interval to refresh booking data; (2) the admin dashboard crashed when there were zero bookings due to a division-by-zero in the check-in rate calculation --- fixed with a null-guard; (3) deactivating a resource did not hide it from the student browse page immediately --- fixed by filtering \texttt{isActive: true} on the resource list query.
+
+\subsection{Finalization Objectives}
+\begin{enumerate}
+    \item \textbf{Bug fixes:}
+        \begin{itemize}
+            \item Resolve all open TestRail bugs from Snapshots 2 and 3
+            \item Add null-guards for all analytics calculations
+            \item Fix stale state bugs on the My Bookings page
+        \end{itemize}
+    \item \textbf{Security improvements:}
+        \begin{itemize}
+            \item Add \texttt{express-rate-limit} to \texttt{/api/auth} routes (max 10 req/IP/15min)
+            \item Audit all routes for missing \texttt{protect} middleware
+        \end{itemize}
+    \item \textbf{UI polish:}
+        \begin{itemize}
+            \item Improve mobile responsiveness across all pages
+            \item Add consistent loading skeletons and error boundaries
+            \item Standardize toast notification styling
+        \end{itemize}
+    \item \textbf{Final Docker validation:}
+        \begin{itemize}
+            \item Confirm clean \texttt{docker-compose up --build} on a fresh clone
+            \item Verify seed data script works inside container
+        \end{itemize}
+    \item \textbf{Final TestRail run:} Run complete regression suite; submit Snapshot 4 report.
+    \item \textbf{Final documentation:} All documents at v4.0 with complete version histories; future work section documented.
+\end{enumerate}
+
+\subsection{Future Work}
+Features not included in the MVP that would be valuable in a production version:
+
+\begin{enumerate}
+    \item \textbf{Email notifications} --- Booking confirmation, check-in reminder (30 min before), and cancellation emails via SendGrid or Nodemailer.
+    \item \textbf{Recurring bookings} --- Allow students to reserve the same time slot on a weekly basis for the duration of a semester.
+    \item \textbf{Waitlist system} --- Let students join a waitlist for a fully booked slot; automatically promote them if a cancellation occurs.
+    \item \textbf{QR code check-in} --- Generate a unique QR code per booking; students scan it on arrival instead of using the app.
+    \item \textbf{Mobile app} --- React Native companion app for on-the-go booking and QR check-in.
+    \item \textbf{Calendar sync} --- Export bookings to Google Calendar or Outlook via ICS feed.
+    \item \textbf{Approval workflow} --- Allow staff to set a resource to ``requires approval,'' creating a pending booking that staff must explicitly confirm.
+    \item \textbf{Penalty system} --- Track no-show history; temporarily suspend booking privileges for users with excessive no-shows.
+    \item \textbf{Multi-campus support} --- Partition resources by campus location for universities with multiple sites.
+\end{enumerate}
+
+\end{document}
