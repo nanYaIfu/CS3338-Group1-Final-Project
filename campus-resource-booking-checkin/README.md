@@ -8,7 +8,7 @@
 
 ## Jira Project Board
 
-🔗 **[View our Jira board](https://calstatela-team-fxcoefw5.atlassian.net/jira/software/projects/WT/boards)**
+🔗 **[View our Jira board](https://calstatela-team-fxcoefw5.atlassian.net/jira/software/projects/WT/boards/101)**
 
 
 ---
