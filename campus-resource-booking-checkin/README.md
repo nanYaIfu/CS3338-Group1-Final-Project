@@ -73,7 +73,6 @@ git clone https://github.com/nanYaIfu/CS3338-Group1-Final-Project.git
 cd CS3338-Group1-Final-Project/campus-resource-booking-checkin
 
 cp backend/.env.example backend/.env
-# Edit backend/.env — set a strong JWT_SECRET
 
 docker-compose up --build
 ```
@@ -84,10 +83,6 @@ docker-compose up --build
 | API      | http://localhost:5000     |
 | MongoDB  | localhost:27017           |
 
-**Seed test data (optional):**
-```bash
-docker exec crbs_backend node seed/seedData.js
-```
 
 ### Without Docker
 
