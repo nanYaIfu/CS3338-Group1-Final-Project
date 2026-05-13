@@ -1,1 +1,281 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
 
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Campus Resource Booking \& Check-In System}
+\lhead{SRS}
+\rfoot{Page \thepage}
+
+\title{
+    \vspace{2cm}
+    {\Large Software Requirements Specification (SRS)} \\[1em]
+    {\LARGE \textbf{Campus Resource Booking \& Check-In System}} \\[2em]
+    {\large CS3338 --- Group 1} \\[0.5em]
+    {\normalsize Version 4.0}
+    \vspace{2cm}
+}
+\author{Herlyn Dsouza}
+\date{May 15, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section*{Versions Table}
+\addcontentsline{toc}{section}{Versions Table}
+
+\begin{longtable}{|p{1.4cm}|p{2.4cm}|p{3.5cm}|p{6.5cm}|}
+\hline
+\textbf{Ver.} & \textbf{Date} & \textbf{Author(s)} & \textbf{Changes} \\
+\hline
+1.0 & Feb 2, 2025  & Herlyn Dsouza & Initial draft. Introduction, user roles, core interface requirements, legal and ethical section. \\
+\hline
+2.0 & Mar 2, 2025  & Herlyn Dsouza & Added full REST API endpoint table, auth requirements, booking creation and cancellation requirements, input validation rules. \\
+\hline
+3.0 & Apr 6, 2025  & Herlyn Dsouza & Added check-in requirements (time window), admin dashboard requirements, analytics endpoint spec, no-show handling requirement. \\
+\hline
+4.0 & May 15, 2025 & Herlyn Dsouza & Final revision. Added rate limiting requirement, session/token expiry requirements, performance requirements, finalized all sections. \\
+\hline
+\end{longtable}
+\newpage
+
+% -------------------------------------------------------
+\section{Introduction}
+
+\subsection{Purpose}
+This Software Requirements Specification (SRS) defines the complete functional and non-functional requirements for the Campus Resource Booking \& Check-In System. It provides a shared understanding between the development team, QA, and the course instructor regarding what the system must do and the constraints under which it must operate.
+
+\subsection{Intended Audience}
+\begin{itemize}
+    \item \textbf{Development team} --- Britany Rodriguez, Herlyn Dsouza, Israel Melchor (to guide implementation decisions at each snapshot)
+    \item \textbf{DevOps / QA} --- Nautica Uribe (to design TestRail test cases that verify each requirement)
+    \item \textbf{Course Instructor} --- for evaluation and project approval
+\end{itemize}
+
+\subsection{Project Overview}
+The Campus Resource Booking \& Check-In System is a web-based platform enabling students to reserve campus resources (study rooms, labs, tutoring appointments) and physically check in upon arrival. Staff manage their resources; admins oversee the entire platform and view usage analytics.
+
+\subsection{Definitions}
+\begin{itemize}
+    \item \textbf{Resource} --- A bookable campus asset: study room, computer lab seat, or tutoring appointment slot
+    \item \textbf{Booking} --- A reservation made by a student for a specific resource and time slot
+    \item \textbf{Check-In} --- The action a student performs on arrival to confirm attendance at a booked resource
+    \item \textbf{Conflict} --- A state where two active bookings overlap in time for the same resource
+    \item \textbf{No-Show} --- A booking whose check-in window expired without the student checking in
+    \item \textbf{Check-In Window} --- The period during which a student may check in: 15 min before to 10 min after booking start
+\end{itemize}
+
+% -------------------------------------------------------
+\section{External Interface Requirements}
+
+\subsection{User Interface Requirements}
+
+\subsubsection{General UI --- All Snapshots}
+\begin{itemize}
+    \item The system shall provide a responsive web interface accessible from modern desktop and mobile browsers (Chrome, Firefox, Safari, Edge).
+    \item All primary pages shall render and be interactive within 3 seconds on a standard broadband connection.
+    \item The UI shall use a consistent navigation bar so users can reach any core feature within 2 clicks.
+    \item All forms shall display inline validation errors before submission.
+    \item The application shall display loading indicators during all API requests.
+\end{itemize}
+
+\subsubsection{Authentication Interface --- Snapshot 2}
+\begin{itemize}
+    \item The system shall provide a \textbf{Login} page with email and password fields plus a submit button.
+    \item The system shall provide a \textbf{Register} page collecting full name, email, password, and role (Student/Staff).
+    \item Passwords shall always be masked in input fields.
+    \item Invalid login attempts shall display a generic ``Invalid credentials'' message without revealing whether the email exists.
+    \item Successful login shall redirect the user to the Resource Browse page.
+    \item Successful registration shall redirect the user to the Login page with a confirmation message.
+\end{itemize}
+
+\subsubsection{Student Interface --- Snapshot 2}
+\begin{itemize}
+    \item Students shall be able to browse all active resources with filtering by type and location.
+    \item Students shall be able to select a date and view available time slots for any resource.
+    \item Students shall be able to create a booking by selecting a resource and an available time slot.
+    \item Students shall be able to view all their upcoming and past bookings.
+    \item Students shall be able to cancel any upcoming booking that is not within the check-in window.
+\end{itemize}
+
+\subsubsection{Check-In Interface --- Snapshot 3}
+\begin{itemize}
+    \item The Check-In button shall appear on the My Bookings page for any upcoming booking.
+    \item The Check-In button shall be \textbf{active} (clickable) only within the check-in window (15 min before to 10 min after start time).
+    \item Outside the check-in window, the button shall be disabled with a tooltip explaining why.
+    \item Successful check-in shall update the booking status badge to ``Checked In'' without requiring a page reload.
+\end{itemize}
+
+\subsubsection{Staff Interface --- Snapshots 2 \& 3}
+\begin{itemize}
+    \item Staff shall be able to create new resources with name, type, location, capacity, and available hours.
+    \item Staff shall be able to edit and deactivate resources they manage.
+    \item Staff shall be able to view a list of all bookings for their resources.
+\end{itemize}
+
+\subsubsection{Admin Interface --- Snapshot 3}
+\begin{itemize}
+    \item Admins shall have a dedicated dashboard accessible only to the \texttt{admin} role.
+    \item The dashboard shall display: total bookings, active resources, check-in rate, and no-show rate as summary cards.
+    \item The dashboard shall display a bar chart of bookings per day for the last 30 days.
+    \item Admins shall be able to manage (view, edit role, deactivate) all users.
+    \item Admins shall be able to view and cancel any booking on the platform.
+\end{itemize}
+
+\subsection{Software Interfaces}
+
+\subsubsection{Frontend--Backend Interface}
+\begin{itemize}
+    \item All frontend-backend communication shall use REST over HTTP/HTTPS.
+    \item All authenticated requests shall include a valid JWT in the \texttt{Authorization: Bearer} header.
+    \item The API shall return JSON responses with correct HTTP status codes (200, 201, 400, 401, 403, 404, 409, 429, 500).
+    \item Validation errors shall return HTTP 400 with a JSON array of field-level error messages.
+\end{itemize}
+
+\subsubsection{Backend--Database Interface}
+\begin{itemize}
+    \item The backend shall use Mongoose to communicate with MongoDB.
+    \item All database operations shall be wrapped in \texttt{try/catch} blocks.
+    \item Booking conflict checks shall be performed as a server-side MongoDB query before any booking is confirmed.
+\end{itemize}
+
+\subsubsection{REST API Endpoint Specification --- Snapshot 2}
+
+\begin{longtable}{|p{1.4cm}|p{4.5cm}|p{2cm}|p{5cm}|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Description} \\
+\hline
+POST & /api/auth/register & Public & Register a new user \\
+\hline
+POST & /api/auth/login    & Public & Login, receive JWT \\
+\hline
+GET  & /api/resources     & Any    & List all active resources \\
+\hline
+POST & /api/resources     & Staff/Admin & Create a resource \\
+\hline
+GET  & /api/resources/:id & Any    & Get resource details \\
+\hline
+PUT  & /api/resources/:id & Staff/Admin & Update a resource \\
+\hline
+DELETE & /api/resources/:id & Admin  & Deactivate a resource \\
+\hline
+GET  & /api/bookings      & Student+ & Get user's bookings \\
+\hline
+POST & /api/bookings      & Student+ & Create a booking \\
+\hline
+PUT  & /api/bookings/:id/cancel  & Student+ & Cancel a booking \\
+\hline
+\end{longtable}
+
+\subsubsection{Additional Endpoints --- Snapshot 3}
+
+\begin{longtable}{|p{1.4cm}|p{4.5cm}|p{2cm}|p{5cm}|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Description} \\
+\hline
+PUT & /api/bookings/:id/checkin & Student & Check in to booking (window-validated) \\
+\hline
+GET & /api/admin/users & Admin & List all users \\
+\hline
+PUT & /api/admin/users/:id & Admin & Update user role or status \\
+\hline
+GET & /api/admin/bookings & Admin & List all bookings \\
+\hline
+GET & /api/admin/analytics & Admin & Usage analytics data \\
+\hline
+\end{longtable}
+
+\subsection{Non-Functional Requirements --- Snapshot 4}
+\begin{itemize}
+    \item \textbf{Rate Limiting:} Authentication endpoints (\texttt{/api/auth/*}) shall enforce a maximum of 10 requests per IP address per 15-minute window. Exceeding this limit shall return HTTP 429.
+    \item \textbf{Token Expiry:} All JWTs shall expire after 24 hours. Expired tokens shall be rejected with HTTP 401.
+    \item \textbf{Password Security:} All passwords shall be hashed with bcrypt at a minimum cost factor of 10.
+    \item \textbf{HTTPS:} In production deployment, all traffic shall be served over HTTPS only.
+    \item \textbf{Performance:} API endpoints shall respond within 500ms under normal load conditions.
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Legal and Ethical Considerations}
+
+\subsection{User Data and Privacy}
+\begin{itemize}
+    \item The system collects personally identifiable information (PII): names, email addresses, and booking history.
+    \item Passwords shall never be stored in plaintext or logged at any level.
+    \item All user data shall remain within the system and shall not be shared with any third party.
+    \item The system adheres to the principle of \textbf{data minimization}: only the data necessary to operate the core features is collected.
+    \item Users shall be informed of data collection upon registration.
+\end{itemize}
+
+\subsection{Access Control}
+\begin{itemize}
+    \item Every API endpoint shall enforce role-based access control (RBAC).
+    \item A student shall not be able to call staff or admin routes, even with a valid JWT.
+    \item A staff member shall only be able to view/edit resources they manage.
+    \item JWT tokens expire after 24 hours, requiring re-authentication.
+\end{itemize}
+
+\subsection{Data Retention}
+\begin{itemize}
+    \item Booking records shall be retained for a minimum of one academic semester to support analytics and dispute resolution.
+    \item Users shall be able to request account deletion, which shall remove or anonymize their PII from the database.
+\end{itemize}
+
+\subsection{Ethical Considerations}
+\begin{itemize}
+    \item \textbf{Equitable access:} The booking system is first-come, first-served. No student group receives preferential treatment.
+    \item \textbf{No surveillance:} Check-in data is used solely to confirm attendance for the booked resource. It shall not be used to build behavioral profiles or track movements.
+    \item \textbf{Transparency:} Users are clearly informed what data is collected and why.
+    \item \textbf{Minimal privilege:} Staff accounts can only manage their assigned resources and cannot view other users' personal profiles.
+    \item \textbf{Disability access:} The UI shall follow WCAG 2.1 AA accessibility guidelines where feasible, including keyboard navigation and sufficient color contrast.
+\end{itemize}
+
+% -------------------------------------------------------
+\section*{Glossary}
+\addcontentsline{toc}{section}{Glossary}
+
+\begin{longtable}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Term / Acronym} & \textbf{Definition} \\
+\hline
+SRS   & Software Requirements Specification \\
+\hline
+API   & Application Programming Interface \\
+\hline
+REST  & Representational State Transfer \\
+\hline
+JWT   & JSON Web Token \\
+\hline
+RBAC  & Role-Based Access Control \\
+\hline
+PII   & Personally Identifiable Information \\
+\hline
+CRUD  & Create, Read, Update, Delete \\
+\hline
+MVP   & Minimum Viable Product \\
+\hline
+ODM   & Object Document Mapper \\
+\hline
+HTTPS & Hypertext Transfer Protocol Secure \\
+\hline
+WCAG  & Web Content Accessibility Guidelines \\
+\hline
+\end{longtable}
+
+\end{document}
