@@ -1,1 +1,358 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Campus Resource Booking \& Check-In System}
+\lhead{Design Spec}
+\rfoot{Page \thepage}
+
+\title{
+    \vspace{2cm}
+    {\Large Design Specification} \\[1em]
+    {\LARGE \textbf{Campus Resource Booking \& Check-In System}} \\[2em]
+    {\large CS3338 --- Group 1} \\[0.5em]
+    {\normalsize Version 4.0}
+    \vspace{2cm}
+}
+\author{Israel Melchor}
+\date{May 15, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section*{Versions Table}
+\addcontentsline{toc}{section}{Versions Table}
+
+\begin{longtable}{|p{1.4cm}|p{2.4cm}|p{3.5cm}|p{6.5cm}|}
+\hline
+\textbf{Ver.} & \textbf{Date} & \textbf{Author(s)} & \textbf{Changes} \\
+\hline
+1.0 & Feb 2, 2025  & Israel Melchor & Initial draft. Page list defined, all dependencies listed, Docker image mapping, environment variables. \\
+\hline
+2.0 & Mar 2, 2025  & Israel Melchor & Added detailed specs for Login, Register, Resource Browse, Booking, and My Bookings pages. Added API call mapping per page. \\
+\hline
+3.0 & Apr 6, 2025  & Israel Melchor & Added specs for Check-In button, Admin Dashboard, Staff Resource Management. Added recharts dependency. \\
+\hline
+4.0 & May 15, 2025 & Israel Melchor & Final revision. Added error state specs, loading state specs, express-rate-limit backend dependency, finalized all sections. \\
+\hline
+\end{longtable}
+\newpage
+
+% -------------------------------------------------------
+\section{Page \& Component Breakdown}
+
+% -------------------------------------------------------
+\subsection{Login Page (\texttt{/login})}
+\textit{Added: Snapshot 2}
+
+\textbf{Purpose:} Authenticate existing users and issue a JWT session.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item Email input (required, type=email)
+    \item Password input (required, type=password, masked)
+    \item Submit button labeled ``Login''
+    \item Error alert (displays on invalid credentials)
+    \item Link to Register page
+\end{itemize}
+
+\textbf{States:}
+\begin{itemize}
+    \item \textit{Loading:} Button disabled, spinner shown while API call is in flight
+    \item \textit{Error:} Red alert banner with ``Invalid email or password'' message
+    \item \textit{Success:} JWT stored in \texttt{localStorage}, redirect to \texttt{/resources}
+\end{itemize}
+
+\textbf{API Call:} \texttt{POST /api/auth/login} \quad Body: \texttt{\{email, password\}}
+
+\hrule\vspace{1em}
+
+% -------------------------------------------------------
+\subsection{Register Page (\texttt{/register})}
+\textit{Added: Snapshot 2}
+
+\textbf{Purpose:} Create a new user account.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item Full name input (required)
+    \item Email input (required)
+    \item Password input (required, minimum 6 characters)
+    \item Role selector: Student / Staff (dropdown)
+    \item Submit button labeled ``Create Account''
+    \item Link back to Login page
+\end{itemize}
+
+\textbf{States:}
+\begin{itemize}
+    \item \textit{Validation error:} Inline error messages per field shown before submit
+    \item \textit{API error:} Alert for duplicate email (``Email already in use'')
+    \item \textit{Success:} Redirect to \texttt{/login} with green toast notification
+\end{itemize}
+
+\textbf{API Call:} \texttt{POST /api/auth/register} \quad Body: \texttt{\{name, email, password, role\}}
+
+\hrule\vspace{1em}
+
+% -------------------------------------------------------
+\subsection{Resource Browse Page (\texttt{/resources})}
+\textit{Added: Snapshot 2}
+
+\textbf{Purpose:} Allow all authenticated users to discover and filter available campus resources.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item Search bar (filter by resource name)
+    \item Type filter dropdown: All / Study Room / Lab / Tutoring
+    \item Location filter dropdown: populated from resource data
+    \item Resource card grid --- each card shows: name, type badge, location, capacity, availability status
+    \item ``Book'' button on each card (navigates to \texttt{/resources/:id/book})
+    \item Empty state message if no results match filters
+\end{itemize}
+
+\textbf{States:}
+\begin{itemize}
+    \item \textit{Loading:} Skeleton card placeholders shown while fetching
+    \item \textit{Empty:} ``No resources found'' message with reset filters link
+    \item \textit{Loaded:} Resource card grid
+\end{itemize}
+
+\textbf{API Call:} \texttt{GET /api/resources}
+
+\hrule\vspace{1em}
+
+% -------------------------------------------------------
+\subsection{Booking Page (\texttt{/resources/:id/book})}
+\textit{Added: Snapshot 2}
+
+\textbf{Purpose:} Let a student create a reservation for a specific resource.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item Resource summary card (name, location, capacity)
+    \item Date picker (calendar widget, today + future dates only)
+    \item Time slot selector --- renders only slots within resource \texttt{availableHours} and not already booked
+    \item Duration selector (30 min / 1 hr / 2 hrs)
+    \item ``Confirm Booking'' button
+    \item Conflict warning banner if the selected slot is unavailable
+\end{itemize}
+
+\textbf{States:}
+\begin{itemize}
+    \item \textit{No date selected:} Time slot selector disabled
+    \item \textit{Conflict:} Yellow warning banner; Confirm button disabled
+    \item \textit{Confirming:} Button shows spinner
+    \item \textit{Success:} Redirect to \texttt{/my-bookings} with success toast
+\end{itemize}
+
+\textbf{API Calls:}
+\begin{itemize}
+    \item \texttt{GET /api/resources/:id} --- load resource details
+    \item \texttt{POST /api/bookings} --- submit booking
+\end{itemize}
+
+\hrule\vspace{1em}
+
+% -------------------------------------------------------
+\subsection{My Bookings Page (\texttt{/my-bookings})}
+\textit{Added: Snapshot 2; Check-In button added Snapshot 3}
+
+\textbf{Purpose:} Let students view and manage their reservations, including checking in.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item Tab bar: Upcoming / Past / Cancelled
+    \item Booking list --- each item shows: resource name, date/time, status badge
+    \item \textbf{Cancel} button --- visible on Upcoming bookings outside check-in window
+    \item \textbf{Check In} button --- visible on Upcoming bookings; active only within check-in window
+    \item Tooltip on disabled Check-In button: ``Check-in opens 15 minutes before your booking starts''
+\end{itemize}
+
+\textbf{Status Badge Colors:}
+\begin{itemize}
+    \item Confirmed --- Blue
+    \item Checked In --- Green
+    \item Cancelled --- Grey
+    \item No-Show --- Red
+\end{itemize}
+
+\textbf{API Calls:}
+\begin{itemize}
+    \item \texttt{GET /api/bookings}
+    \item \texttt{PUT /api/bookings/:id/cancel}
+    \item \texttt{PUT /api/bookings/:id/checkin}
+\end{itemize}
+
+\hrule\vspace{1em}
+
+% -------------------------------------------------------
+\subsection{Staff Resource Management (\texttt{/staff/resources})}
+\textit{Added: Snapshot 3}
+
+\textbf{Purpose:} Allow staff to create and manage their assigned resources.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item Table listing all resources managed by the logged-in staff user
+    \item Table columns: Name, Type, Location, Capacity, Status (Active/Inactive), Edit button, Deactivate button
+    \item ``+ Add Resource'' button (opens modal form)
+    \item Modal form fields: Name, Type (dropdown), Location, Capacity, Open Time, Close Time
+    \item Form validation with inline errors
+\end{itemize}
+
+\textbf{API Calls:}
+\begin{itemize}
+    \item \texttt{GET /api/resources} (filtered to staff's resources)
+    \item \texttt{POST /api/resources}
+    \item \texttt{PUT /api/resources/:id}
+    \item \texttt{DELETE /api/resources/:id}
+\end{itemize}
+
+\hrule\vspace{1em}
+
+% -------------------------------------------------------
+\subsection{Admin Dashboard (\texttt{/admin})}
+\textit{Added: Snapshot 3}
+
+\textbf{Purpose:} Give admins a centralized view of the entire platform.
+
+\textbf{UI Components:}
+\begin{itemize}
+    \item \textbf{Summary Cards Row:} Total Bookings, Active Resources, Check-In Rate (\%), No-Show Rate (\%)
+    \item \textbf{Bar Chart:} Bookings per day over the last 30 days (built with \texttt{recharts})
+    \item \textbf{Top Resources Table:} Top 5 most-booked resources with booking counts
+    \item \textbf{User Management Table:} All users with Name, Email, Role, Status, Edit/Deactivate actions
+    \item \textbf{All Bookings Table:} Searchable/filterable list of every booking on the platform
+\end{itemize}
+
+\textbf{API Calls:}
+\begin{itemize}
+    \item \texttt{GET /api/admin/analytics}
+    \item \texttt{GET /api/admin/users}
+    \item \texttt{PUT /api/admin/users/:id}
+    \item \texttt{GET /api/admin/bookings}
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Shared Components}
+
+\begin{longtable}{|p{4cm}|p{9cm}|}
+\hline
+\textbf{Component} & \textbf{Description} \\
+\hline
+\texttt{Navbar.jsx} & Top navigation bar; shows links based on user role; logout button \\
+\hline
+\texttt{ProtectedRoute.jsx} & Wraps routes that require auth; redirects to \texttt{/login} if no token \\
+\hline
+\texttt{ResourceCard.jsx} & Reusable card for displaying a single resource on the Browse page \\
+\hline
+\texttt{BookingCard.jsx} & Reusable card for a single booking on the My Bookings page \\
+\hline
+\texttt{AuthContext.jsx} & React Context providing \texttt{user}, \texttt{token}, \texttt{login()}, \texttt{logout()} globally \\
+\hline
+\texttt{api.js} & Axios instance with base URL and JWT Authorization header interceptor \\
+\hline
+\end{longtable}
+
+% -------------------------------------------------------
+\section{Dependencies \& Docker Container Packages}
+
+\subsection{Frontend Container (\texttt{node:18-alpine}, port 3000)}
+
+\begin{longtable}{|p{4.5cm}|p{2.2cm}|p{7cm}|}
+\hline
+\textbf{Package} & \textbf{Version} & \textbf{Purpose} \\
+\hline
+react              & 18.x & Core UI library \\
+\hline
+react-dom          & 18.x & DOM rendering \\
+\hline
+react-scripts      & 5.x  & CRA build toolchain \\
+\hline
+react-router-dom   & 6.x  & Client-side routing \\
+\hline
+axios              & 1.x  & HTTP client for API calls \\
+\hline
+bootstrap          & 5.x  & Responsive CSS \\
+\hline
+react-bootstrap    & 2.x  & Bootstrap React components \\
+\hline
+recharts           & 2.x  & Charting library for admin dashboard \\
+\hline
+\end{longtable}
+
+\subsection{Backend Container (\texttt{node:18-alpine}, port 5000)}
+
+\begin{longtable}{|p{4.5cm}|p{2.2cm}|p{7cm}|}
+\hline
+\textbf{Package} & \textbf{Version} & \textbf{Purpose} \\
+\hline
+express            & 4.x & HTTP server and routing \\
+\hline
+mongoose           & 7.x & MongoDB ODM \\
+\hline
+jsonwebtoken       & 9.x & JWT sign and verify \\
+\hline
+bcrypt             & 5.x & Password hashing \\
+\hline
+dotenv             & 16.x & Environment variable loading \\
+\hline
+cors               & 2.x & Cross-origin resource sharing \\
+\hline
+express-validator  & 7.x & Input validation middleware \\
+\hline
+express-rate-limit & 7.x & Auth route brute-force protection \\
+\hline
+nodemon            & 3.x & Dev server auto-restart (dev only) \\
+\hline
+\end{longtable}
+
+\subsection{Database Container (\texttt{mongo:6}, port 27017)}
+
+\begin{longtable}{|p{4.5cm}|p{2.2cm}|p{7cm}|}
+\hline
+\textbf{Service} & \textbf{Version} & \textbf{Notes} \\
+\hline
+MongoDB & 6.x & Primary document database \\
+\hline
+\end{longtable}
+
+\textbf{Persistent volume:} \texttt{mongo\_data:/data/db}
+
+\subsection{Environment Variables}
+
+\begin{longtable}{|p{4.5cm}|p{3.5cm}|p{6cm}|}
+\hline
+\textbf{Variable} & \textbf{Example Value} & \textbf{Description} \\
+\hline
+\texttt{MONGO\_URI}         & mongodb://mongo:27017/crbs & MongoDB connection string \\
+\hline
+\texttt{JWT\_SECRET}        & supersecretkey            & JWT signing secret \\
+\hline
+\texttt{PORT}               & 5000                      & Backend server port \\
+\hline
+\texttt{NODE\_ENV}          & development               & Runtime environment \\
+\hline
+\texttt{REACT\_APP\_API\_URL} & http://localhost:5000   & Frontend API base URL \\
+\hline
+\end{longtable}
+
+\end{document}
 
