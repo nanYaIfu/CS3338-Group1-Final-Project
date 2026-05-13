@@ -10,7 +10,6 @@
 
 🔗 **[View our Jira board](https://calstatela-team-fxcoefw5.atlassian.net/jira/software/projects/WT/boards)**
 
-*(Replace this link with your actual Jira URL before submission.)*
 
 ---
 
